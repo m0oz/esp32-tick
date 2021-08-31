@@ -1,0 +1,237 @@
+const char INDEX_HTML[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon" href="/apple_touch_icon.png">
+
+    <title>Ticki &lt;3</title>
+    <style>
+        html {
+            font-family: Helvetica;
+            display: inline-block;
+            margin: 0px auto;
+            text-align: center;
+        }
+
+        body {
+            margin-top: 40px;
+            width: 400px;
+            margin: 0 auto;
+            background-image: url('https://p2.piqsels.com/preview/301/193/242/astrophotography-photos-galaxy-milky-way.jpg');
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        h1 {
+            color: rgb(255, 255, 255);
+            margin: 40px;
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            color: rgb(255, 255, 255);
+            margin-bottom: 10px;
+        }
+
+        #overlay {
+            /* Sit on top of the page content */
+            position: fixed;
+            /* Show by default */
+            display: block;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            /* Specify a stack order in case you're using a different order for other elements */
+            z-index: 2;
+            /* Add a pointer on hover */
+            cursor: pointer;
+        }
+
+        #overlay-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            font-size: 25px;
+            color: white;
+            transform: translate(-50%, -50%);
+            -ms-transform: translate(-50%, -50%);
+        }
+
+        input[type=time] {
+            /* border: none; */
+            padding: 5px;
+            margin: 10px auto 5px;
+            color: #000000;
+            font-size: 18px;
+            font-family: sans-serif;
+        }
+
+        label {
+            color: rgb(255, 255, 255);
+        }
+
+        p {
+            font-size: 14px;
+            color: rgb(255, 255, 255);
+            margin-bottom: 10px;
+        }
+    </style>
+
+    <script>
+        // check if clock is connected to this webserver
+        function checkConnection() {
+            console.log("check connection...");
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "/checkconnection", true);
+            xhr.timeout = 4000;
+            xhr.send();
+            xhr.onload = function () {
+                console.log("connected!")
+                document.getElementById("connected").style.display = "block";
+                document.getElementById("not-connected").style.display = "none";
+                // hide overlay
+                document.getElementById("overlay").style.display = "none";
+            };
+            xhr.ontimeout = function (e) {
+                console.log("NOT connected!")
+                document.getElementById("connected").style.display = "none";
+                document.getElementById("not-connected").style.display = "block";
+                // show overlay
+                document.getElementById("overlay").style.display = "block";
+            };
+            getNextAlarmString();
+        }
+
+        // return number padded as two digit string 
+        // (i.e. return '07' for 7 or '11' for 11)
+        function pad2(number) {
+            return (number < 10 ? '0' : '') + number
+        }
+
+        function getTime() {
+            console.log("get time...");
+            var xhr = new XMLHttpRequest();
+            var json;
+            xhr.open("GET", "/gettime", true);
+            xhr.responseType = "application/json";
+            xhr.send();
+            xhr.onload = function () {
+                var json = JSON.parse(xhr.responseText)
+                let time = pad2(json.hour) + ":" + pad2(json.min);
+                console.log(time)
+                document.getElementById('time-input').value =
+                    time;
+            };
+        }
+
+        function getDays() {
+            console.log("get days...");
+            var xhr = new XMLHttpRequest();
+            var json;
+            xhr.open("GET", "/getdays", true);
+            xhr.responseType = "application/json";
+            xhr.send();
+            xhr.onload = function () {
+                var json = JSON.parse(xhr.responseText)
+                console.log(xhr.responseText);
+                console.log(json.mon);
+                if (json.mon) {
+                    console.log("test")
+                    document.getElementById('mon-checkbox').checked = true
+                }
+                if (json.tue) { document.getElementById('tue-checkbox').checked = true }
+                if (json.wed) { document.getElementById('wed-checkbox').checked = true }
+                if (json.thu) { document.getElementById('thu-checkbox').checked = true }
+                if (json.fri) { document.getElementById('fri-checkbox').checked = true }
+                if (json.sat) { document.getElementById('sat-checkbox').checked = true }
+                if (json.sun) { document.getElementById('sun-checkbox').checked = true }
+            };
+        }
+
+        function setTime() {
+            var xhr = new XMLHttpRequest();
+            let hour = document.getElementById('time-input').value.split(":")[0];
+            let min = document.getElementById('time-input').value.split(":")[1];
+            xhr.open("GET", "/settime?hour=" + hour + "&min=" + min, true);
+            xhr.send();
+        }
+
+        function setDay(day_input) {
+            var xhr = new XMLHttpRequest();
+            let day_name = day_input.name;
+            let onoff = (day_input.checked ? 1 : 0);
+            console.log('day: ' + day_name)
+            console.log('on/off: ' + onoff)
+            xhr.open("GET", "/setday?day=" + day_name + "&onoff=" + onoff, true);
+            xhr.send();
+        }
+
+        function getNextAlarmString() {
+            console.log("get alarm string...");
+            var xhr = new XMLHttpRequest();
+            var json;
+            xhr.open("GET", "/getalarmstring", true);
+            xhr.responseType = "text/plain";
+            xhr.send();
+            xhr.onload = function () {
+                console.log(xhr.response)
+                document.getElementById('alarm-info').textContent = xhr.response
+            }
+        };
+
+
+        window.onload = getTime();
+        window.onload = getDays();
+        setInterval(checkConnection, 5000)
+    </script>
+
+</head>
+
+<body>
+    <div id="overlay">
+        <div id="overlay-text">Waiting for connection</div>
+    </div>
+
+    <h1>Ticki</h1>
+    <p id="connected" style="color: #2ecc71; display: none;">connected</p>
+    <p id="not-connected" style="color: #cc4e2e; display: none;">not connected</p>
+
+    <h3>Wake me at</h3>
+
+    <input type="time" id="time-input" name="time-input" onchange="setTime()" required>
+
+    <h3>Wake me on</h3>
+    <table align="center">
+        <tr>
+            <td><input type="checkbox" id="mon-checkbox" onchange="setDay(this)" name="0"></td>
+            <td><label for="0"> Mo</label><br></td>
+            <td><input type="checkbox" id="tue-checkbox" onchange="setDay(this)" name="1"></td>
+            <td><label for="1"> Tu</label><br></td>
+            <td><input type="checkbox" id="wed-checkbox" onchange="setDay(this)" name="2"></td>
+            <td><label for="2"> We</label><br></td>
+            <td><input type="checkbox" id="thu-checkbox" onchange="setDay(this)" name="3"></td>
+            <td><label for="3"> Th</label><br></td>
+            <td><input type="checkbox" id="fri-checkbox" onchange="setDay(this)" name="4"></td>
+            <td><label for="4"> Fr</label><br></td>
+            <td><input type="checkbox" id="sat-checkbox" onchange="setDay(this)" name="5"></td>
+            <td><label for="5"> Sa</label><br></td>
+            <td><input type="checkbox" id="sun-checkbox" onchange="setDay(this)" name="6"></td>
+            <td><label for="6"> Su</label><br></td>
+        </tr>
+    </table>
+
+    <p id="alarm-info"></p>
+
+</body>
+
+</html>
+)rawliteral";
