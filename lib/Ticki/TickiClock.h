@@ -26,9 +26,7 @@ TimeChangeRule STD = {"CET", Last, Sun,
 
 class Clock {
    public:
-    Clock()
-        : timezone_(DST, STD), alarm_days_{true,  false, true, false,
-                                           false, false, false} {}
+    Clock() : timezone_(DST, STD), config_{DEFAULT_CONFIG} {}
 
     void setup() {
         configTime(0, 0, NTP_ADDRESS);
@@ -65,20 +63,19 @@ class Clock {
     String printAlarm() {
         time_t t = getLocalTime();
         uint8_t today = getWeekday(t);
-        String alarm_string = "\u23F0 ";
+        String alarm_string = "";
         bool alarm_on = false;
 
         // handle case if alarm is later today
-        if (alarm_days_[today] &&
-            ((hour(t) < alarm_hour_) ||
-             (hour(t) == alarm_hour_ && minute(t) < alarm_min_))) {
+        if (config_.alarm_days[today] && ((hour(t) < config_.alarm_hour) ||
+                                          (hour(t) == config_.alarm_hour &&
+                                           minute(t) < config_.alarm_min))) {
             alarm_string += WEEKDAYS[today];
             alarm_on = true;
         } else {
             // handle case if alarm is any other weekday
-            for (int day = today + 1; day != today; day++) {
-                day %= 7;
-                if (alarm_days_[day]) {
+            for (int day = today + 1; day != today; ++day %= 7) {
+                if (config_.alarm_days[day]) {
                     alarm_string += WEEKDAYS[day];
                     alarm_on = true;
                     break;
@@ -88,28 +85,17 @@ class Clock {
 
         if (alarm_on) {
             char buf[10];
-            sprintf(buf, " %.2d:%.2d", alarm_hour_, alarm_min_);
+            sprintf(buf, " %.2d:%.2d", config_.alarm_hour, config_.alarm_min);
             alarm_string += String(buf);
         } else {
-            alarm_string = "\u23F0 off";
+            alarm_string = "off";
         }
 
         Serial.println("Alarm: " + alarm_string);
         return alarm_string;
     }
 
-    void setAlarm(int hour, int min) {
-        if (hour != alarm_hour_ || min != alarm_min_) {
-            alarm_hour_ = hour;
-            alarm_min_ = min;
-            Serial.print("Set alarm time: ");
-            Serial.print(alarm_hour_);
-            Serial.print(":");
-            Serial.println(alarm_min_);
-        }
-    }
-
-    void setAlarmDays(std::array<bool, 7> days) { alarm_days_ = days; }
+    void setConfig(const TickiConfig& config) { config_ = config; }
 
     /**
      * @brief Get weekday as int, monday == 0, sunday == 6
@@ -126,13 +112,16 @@ class Clock {
         }
     }
 
-    void checkAlarm() {
+    bool checkAlarm() {
         time_t t = getLocalTime();
-        if (alarm_days_[getWeekday(t)]) {
-            if (hour(t) == alarm_hour_ && minute(t) == alarm_min_) {
+        if (config_.alarm_days[getWeekday(t)]) {
+            if (hour(t) == config_.alarm_hour &&
+                minute(t) == config_.alarm_min) {
                 Serial.println("ALARM!!!!!!!!!!");
+                return true;
             }
         }
+        return false;
     }
 
     time_t getLocalTime() {
@@ -147,9 +136,7 @@ class Clock {
     Timezone timezone_;
     TimeChangeRule* tcr_ptr_;
     time_t utc_;
-    int alarm_hour_;
-    int alarm_min_;
-    std::array<bool, 7> alarm_days_;
+    struct TickiConfig config_;
 };
 
 }  // namespace tick

@@ -31,10 +31,10 @@ class Display {
         u8g2_.drawLine(0, 0, 0, 127);
         u8g2_.drawLine(127, 0, 127, 127);
         u8g2_.drawLine(0, 127, 127, 127);
-        u8g2_.setFont(u8g2_font_fub17_tr);  // Choose font to use
-        u8g2_.drawStr(36, 60, "Ticki");     // set position and text to display
-        u8g2_.setFont(u8g2_font_fub11_tr);  // Choose font to use
-        u8g2_.drawStr(30, 80, "Hallo <3");  // set position and text to display
+        u8g2_.setFont(u8g2_font_fub17_tr);
+        u8g2_.drawStr(40, 50, "Ticki");
+        u8g2_.setFont(u8g2_font_open_iconic_human_4x_t);
+        u8g2_.drawUTF8(49, 90, "\u0042");  // heart
         u8g2_.sendBuffer();
     }
 
@@ -51,12 +51,13 @@ class Display {
         // drawFrame();
         u8g2_.setFont(u8g2_font_fub17_tr);
         u8g2_.drawStr(32, 30, time.c_str());
-        // u8g2_.setFont(u8g2_font_fub11_tr);
-        u8g2_.setFont(u8g2_font_unifont_t_weather);
-        u8g2_.drawUTF8(4, 55, weather_symbol.c_str());
-        u8g2_.setFont(u8g2_font_unifont_t_symbols);
-        u8g2_.drawUTF8(25, 55, line1.c_str());
-        u8g2_.drawUTF8(4, 80, line2.c_str());
+        u8g2_.setFont(u8g2_font_open_iconic_weather_2x_t);
+        u8g2_.drawUTF8(4, 58, weather_symbol.c_str());
+        u8g2_.setFont(u8g2_font_open_iconic_embedded_2x_t);
+        u8g2_.drawUTF8(4, 83, "\u0041");
+        u8g2_.setFont(u8g2_font_fub11_tr);
+        u8g2_.drawUTF8(29, 55, line1.c_str());
+        u8g2_.drawUTF8(29, 80, line2.c_str());
         u8g2_.drawUTF8(4, 105, line3.c_str());
         u8g2_.sendBuffer();
     }

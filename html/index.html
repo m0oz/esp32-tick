@@ -1,6 +1,5 @@
 const char INDEX_HTML[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
-<html>
 
 <head>
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
@@ -9,88 +8,13 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <link rel="apple-touch-icon" href="/apple_touch_icon.png">
 
-    <title>Ticki &lt;3</title>
-    <style>
-        html {
-            font-family: Helvetica;
-            display: inline-block;
-            margin: 0px auto;
-            text-align: center;
-        }
-
-        body {
-            margin-top: 40px;
-            width: 400px;
-            margin: 0 auto;
-            background-image: url('https://p2.piqsels.com/preview/301/193/242/astrophotography-photos-galaxy-milky-way.jpg');
-            background-repeat: no-repeat;
-            background-size: cover;
-        }
-
-        h1 {
-            color: rgb(255, 255, 255);
-            margin: 40px;
-            margin-bottom: 20px;
-        }
-
-        h3 {
-            color: rgb(255, 255, 255);
-            margin-bottom: 10px;
-        }
-
-        #overlay {
-            /* Sit on top of the page content */
-            position: fixed;
-            /* Show by default */
-            display: block;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            /* Specify a stack order in case you're using a different order for other elements */
-            z-index: 2;
-            /* Add a pointer on hover */
-            cursor: pointer;
-        }
-
-        #overlay-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            font-size: 25px;
-            color: white;
-            transform: translate(-50%, -50%);
-            -ms-transform: translate(-50%, -50%);
-        }
-
-        input[type=time] {
-            /* border: none; */
-            padding: 5px;
-            margin: 10px auto 5px;
-            color: #000000;
-            font-size: 18px;
-            font-family: sans-serif;
-        }
-
-        label {
-            color: rgb(255, 255, 255);
-        }
-
-        p {
-            font-size: 14px;
-            color: rgb(255, 255, 255);
-            margin-bottom: 10px;
-        }
-    </style>
+    <title>Ticki ♡</title>
 
     <script>
         // check if clock is connected to this webserver
         function checkConnection() {
             console.log("check connection...");
-            var xhr = new XMLHttpRequest();
+            let xhr = new XMLHttpRequest();
             xhr.open("GET", "/checkconnection", true);
             xhr.timeout = 4000;
             xhr.send();
@@ -117,15 +41,14 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
             return (number < 10 ? '0' : '') + number
         }
 
-        function getTime() {
+        function getAlarmTime() {
             console.log("get time...");
-            var xhr = new XMLHttpRequest();
-            var json;
+            let xhr = new XMLHttpRequest();
             xhr.open("GET", "/gettime", true);
             xhr.responseType = "application/json";
             xhr.send();
             xhr.onload = function () {
-                var json = JSON.parse(xhr.responseText)
+                let json = JSON.parse(xhr.responseText)
                 let time = pad2(json.hour) + ":" + pad2(json.min);
                 console.log(time)
                 document.getElementById('time-input').value =
@@ -133,10 +56,9 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
             };
         }
 
-        function getDays() {
+        function getAlarmDays() {
             console.log("get days...");
-            var xhr = new XMLHttpRequest();
-            var json;
+            let xhr = new XMLHttpRequest();
             xhr.open("GET", "/getdays", true);
             xhr.responseType = "application/json";
             xhr.send();
@@ -157,16 +79,16 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
             };
         }
 
-        function setTime() {
-            var xhr = new XMLHttpRequest();
+        function setAlarmTime() {
+            let xhr = new XMLHttpRequest();
             let hour = document.getElementById('time-input').value.split(":")[0];
             let min = document.getElementById('time-input').value.split(":")[1];
             xhr.open("GET", "/settime?hour=" + hour + "&min=" + min, true);
             xhr.send();
         }
 
-        function setDay(day_input) {
-            var xhr = new XMLHttpRequest();
+        function setAlarmDay(day_input) {
+            let xhr = new XMLHttpRequest();
             let day_name = day_input.name;
             let onoff = (day_input.checked ? 1 : 0);
             console.log('day: ' + day_name)
@@ -177,23 +99,224 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
 
         function getNextAlarmString() {
             console.log("get alarm string...");
-            var xhr = new XMLHttpRequest();
-            var json;
+            let xhr = new XMLHttpRequest();
             xhr.open("GET", "/getalarmstring", true);
             xhr.responseType = "text/plain";
             xhr.send();
             xhr.onload = function () {
-                console.log(xhr.response)
-                document.getElementById('alarm-info').textContent = xhr.response
+                console.log(xhr.response);
+                document.getElementById('alarm-info').textContent = xhr.response;
             }
         };
 
+        function setRadioStation(radio_input) {
+            console.log("set radio " + radio_input.value);
+            let xhr = new XMLHttpRequest();
+            xhr.open("GET", "/setradio?station=" + radio_input.value, true);
+            xhr.responseType = "text/plain";
+            xhr.send();
+        }
 
-        window.onload = getTime();
-        window.onload = getDays();
+        function getRadioStation(radio_input) {
+            console.log("get radio station...")
+            let xhr = new XMLHttpRequest();
+            xhr.open("GET", "/getradiostation", true);
+            xhr.send();
+            xhr.onload = function () {
+                station = response.responseText
+                console.log("got radio " + station);
+                document.getElementById(station).checked = true;
+            }
+        }
+
+        function playRadio() {
+            console.log("start radio");
+            let xhr = new XMLHttpRequest();
+            xhr.open("GET", "/startradio", true);
+            xhr.responseType = "text/plain";
+            xhr.send();
+            xhr.onload = function () {
+                console.log(xhr.response);
+                document.getElementById('button-stop').style.display = "block";
+                document.getElementById('button-play').style.display = "none";
+            }
+        };
+
+        function stopRadio() {
+            console.log("start radio");
+            let xhr = new XMLHttpRequest();
+            xhr.open("GET", "/stopradio", true);
+            xhr.responseType = "text/plain";
+            xhr.send();
+            xhr.onload = function () {
+                console.log(xhr.response);
+                document.getElementById('button-stop').style.display = "none";
+                document.getElementById('button-play').style.display = "block";
+            }
+
+        };
+
+        function getVolume() {
+            let xhr = new XMLHttpRequest();
+            xhr.open("GET", "/getvolume", true);
+            xhr.responseType = "text/plain";
+            xhr.send();
+            xhr.onload = function () {
+                document.getElementById('volume-range').value = int(response.responseText);
+            }
+        };
+
+        function setVolume(volume_input) {
+            let xhr = new XMLHttpRequest();
+            xhr.open("GET", "/setvolume?value=" + volume_input.value, true);
+            xhr.responseType = "text/plain";
+            xhr.send();
+        };
+
+
+        window.onload = checkConnection();
+        window.onload = getAlarmTime();
+        window.onload = getAlarmDays();
+        window.onload = getVolume();
+        window.onload = getRadioStation();
         setInterval(checkConnection, 5000)
     </script>
 
+    <style>
+        body {
+            font-family: Helvetica;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-image: url('https://p2.piqsels.com/preview/301/193/242/astrophotography-photos-galaxy-milky-way.jpg');
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-size: cover;
+            min-height: 100vh;
+        }
+
+        h1 {
+            display: flex;
+            justify-content: center;
+            color: rgb(255, 255, 255);
+            margin: 40px;
+            margin-bottom: 20px;
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        }
+
+        h3 {
+            display: flex;
+            justify-content: center;
+            color: rgb(255, 255, 255);
+            margin-bottom: 10px;
+        }
+
+        #overlay {
+            /* Sit on top of the page content */
+            position: fixed;
+            /* Show by default */
+            /* display: block; */
+            display: none;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            /* Specify a stack order in case you're using a different order for other elements */
+            z-index: 2;
+            /* Add a pointer on hover */
+            cursor: pointer;
+        }
+
+        #overlay-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            font-size: 20px;
+            color: white;
+            transform: translate(-50%, -50%);
+            -ms-transform: translate(-50%, -50%);
+        }
+
+        input[type=time] {
+            display: flex;
+            justify-content: center;
+            /* border: none; */
+            padding: 5px;
+            margin: 5px auto 5px;
+            color: #000000;
+            font-size: 18px;
+            font-family: sans-serif;
+        }
+
+        td {
+            text-align: center;
+        }
+
+        input[type=radio] {
+            border: 0px;
+            width: 1.5em;
+            height: 1.5em;
+        }
+
+        input[type=checkbox] {
+            border: 0px;
+            margin: 0.2em 0.6em;
+            width: 1.5em;
+            height: 1.5em;
+        }
+
+        label {
+            color: rgb(255, 255, 255);
+        }
+
+        p {
+            font-size: 14px;
+            color: rgb(255, 255, 255);
+            margin-bottom: 10px;
+        }
+
+
+        .button {
+            border: none;
+            border-radius: 0.5em 0.5em 0.5em 0.5em;
+            color: white;
+            padding: 12px 14px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 15px;
+            margin: 9px 6px;
+            cursor: pointer;
+        }
+
+        #button-play {
+            background-color: #2ecc82;
+        }
+
+        #button-stop {
+            background-color: #cc2e50;
+            display: none;
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #bbbbbbbe;
+            border-radius: 0.5em 0.5em 0.5em 0.5em;
+            padding: 5px;
+            padding-top: 0px;
+            margin: 5px;
+            flex-direction: column;
+            width: 25em;
+            max-width: 80%;
+            min-width: 250px;
+            text-align: center;
+        }
+    </style>
 </head>
 
 <body>
@@ -201,37 +324,60 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
         <div id="overlay-text">Waiting for connection</div>
     </div>
 
-    <h1>Ticki</h1>
-    <p id="connected" style="color: #2ecc71; display: none;">connected</p>
-    <p id="not-connected" style="color: #cc4e2e; display: none;">not connected</p>
+    <h1>Ticki ⏰</h1>
 
-    <h3>Wake me at</h3>
+    <div class="container">
+        <h3>Wake me at</h3>
+        <input type="time" id="time-input" name="time-input" onchange="setAlarmTime()" required>
+    </div>
 
-    <input type="time" id="time-input" name="time-input" onchange="setTime()" required>
 
-    <h3>Wake me on</h3>
-    <table align="center">
-        <tr>
-            <td><input type="checkbox" id="mon-checkbox" onchange="setDay(this)" name="0"></td>
-            <td><label for="0"> Mo</label><br></td>
-            <td><input type="checkbox" id="tue-checkbox" onchange="setDay(this)" name="1"></td>
-            <td><label for="1"> Tu</label><br></td>
-            <td><input type="checkbox" id="wed-checkbox" onchange="setDay(this)" name="2"></td>
-            <td><label for="2"> We</label><br></td>
-            <td><input type="checkbox" id="thu-checkbox" onchange="setDay(this)" name="3"></td>
-            <td><label for="3"> Th</label><br></td>
-            <td><input type="checkbox" id="fri-checkbox" onchange="setDay(this)" name="4"></td>
-            <td><label for="4"> Fr</label><br></td>
-            <td><input type="checkbox" id="sat-checkbox" onchange="setDay(this)" name="5"></td>
-            <td><label for="5"> Sa</label><br></td>
-            <td><input type="checkbox" id="sun-checkbox" onchange="setDay(this)" name="6"></td>
-            <td><label for="6"> Su</label><br></td>
-        </tr>
-    </table>
+    <div class="container">
+        <h3>Wake me on</h3>
+        <table align="center">
+            <tr>
+                <td><input type="checkbox" id="mon-checkbox" onchange="setAlarmDay(this)" name="0"></td>
+                <td><input type="checkbox" id="tue-checkbox" onchange="setAlarmDay(this)" name="1"></td>
+                <td><input type="checkbox" id="wed-checkbox" onchange="setAlarmDay(this)" name="2"></td>
+                <td><input type="checkbox" id="thu-checkbox" onchange="setAlarmDay(this)" name="3"></td>
+                <td><input type="checkbox" id="fri-checkbox" onchange="setAlarmDay(this)" name="4"></td>
+                <td><input type="checkbox" id="sat-checkbox" onchange="setAlarmDay(this)" name="5"></td>
+                <td><input type="checkbox" id="sun-checkbox" onchange="setAlarmDay(this)" name="6"></td>
+            </tr>
+            <tr>
+                <td><label for="0"> Mo</label><br></td>
+                <td><label for="1"> Tu</label><br></td>
+                <td><label for="2"> We</label><br></td>
+                <td><label for="3"> Th</label><br></td>
+                <td><label for="4"> Fr</label><br></td>
+                <td><label for="5"> Sa</label><br></td>
+                <td><label for="6"> Su</label><br></td>
+            </tr>
+        </table>
+        <p id="alarm-info"></p>
+    </div>
 
-    <p id="alarm-info"></p>
+    <div class="container">
+        <h3>Radio Station</h3>
+        <div>
+            <input type="radio" id="SRF2" name="radio" value="SRF2" onchange="setRadioStation(this)" checked>
+            <label for="SRF2">SRF</label>
+            <input type="radio" id="Fritz" name="radio" value="Fritz" onchange="setRadioStation(this)">
+            <label for="Fritz">Fritz</label>
+            <input type="radio" id="egoFM" name="radio" value="egoFM" onchange="setRadioStation(this)">
+            <label for="egoFM">egoFM</label>
+        </div>
+        <div>
+            <button class="button" id="button-play" onclick="playRadio()">Play</button>
+            <button class="button" id="button-stop" onclick="stopRadio()">Stop</button>
+        </div>
+        <label for="volume">Volume</label>
+        <input type="range" id="volume-range" name="volume" onchange="setVolume(this)" min="0" max="100">
+
+    </div>
+    <h4 id="connected" style="color: #2ecc71; display: none;">connected</h4>
+    <h4 id="not-connected" style="color: #cc4e2e; display: block;">not connected</h4>
 
 </body>
 
-</html>
 )rawliteral";

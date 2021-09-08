@@ -14,8 +14,6 @@
 #include <ArduinoJson.h>
 #include <WiFiClientSecure.h>
 
-#include <utility>
-
 #include "MeteoswissCert.h"
 
 namespace tick {
@@ -29,88 +27,72 @@ class Weather {
         String weather_symbol;
         switch (weather_status_) {
             case rainy:
-                weather_symbol = "\u0037";
+                weather_symbol = "\u0043";
                 break;
 
             case cloudy:
-                weather_symbol = "\u0035";
+                weather_symbol = "\u0040";
                 break;
 
             case sunny:
                 weather_symbol =
-                    "\u002E";  // TODO: sonnenstunden addieren und zählen
+                    "\u0045";  // TODO: sonnenstunden addieren und zählen
         }
         return weather_symbol;
     }
 
-    String printWeatherReport(time_t utc_now, bool verbose = false) {
-        Serial.print("Max/Min: ");
-        Serial.print(max_temp_.second);
-        Serial.print("(");
-        Serial.print(max_temp_.first);
-        Serial.print("h) / ");
-        Serial.print(min_temp_.second);
-        Serial.print("(");
-        Serial.print(min_temp_.first);
-        Serial.print("h), ");
+    String printMinMaxTemp(bool verbose = false) {
+        Serial.printf("Max/Min: %.2fdeg(%02d) / %.2fdeg(%02dh)\n",
+                      max_temp_.second, max_temp_.first, min_temp_.second,
+                      min_temp_.first);
 
         // only print detailed report when verbose
         if (verbose) {
-            bool now = false;
             for (int h = 0; h < 24; h++) {
-                float utc_report = temp_report_[h][0].as<float>() * 1e-3;
                 float temp = temp_report_[h][1].as<float>();
                 float rain = rain_report_[h][1].as<float>();
-                if ((utc_report > utc_now) && !now) {
-                    Serial.println("NOW");
-                    now = true;
-                }
-                Serial.print("Time h: ");
-                Serial.print(h);
-                Serial.print(", temp deg: ");
-                Serial.print(temp);
-                Serial.print(", rain mm/h: ");
-                Serial.print(rain);
-                Serial.println();
+                Serial.printf("Time h: %02d, temp deg %.2f, rain mm/h:%.2f\n",
+                              h, temp, rain);
             }
         }
 
         // compose string for display
         char buf[32];
-        sprintf(buf, "%d°/%d°", int(max_temp_.second), int(min_temp_.second));
+        sprintf(buf, "%.1f°/%.1f°", max_temp_.second, min_temp_.second);
         String weather_string = String(buf);
         return weather_string;
     }
 
-    void updateMinMaxTemp(time_t utc_now) {
+    /**
+     * @brief Get min and max temperature between the given hours
+     *
+     * @param start_h
+     * @param end_h
+     */
+    void updateMinMaxTemp(uint8_t start_h = 7, uint8_t end_h = 22) {
         min_temp_.second = 50.;
         max_temp_.second = -50.;
         weather_status_ = cloudy;  // default symbol
-        for (int h = 0; h < 24; h++) {
-            float utc_report = temp_report_[h][0].as<float>() * 1e-3;
+        for (int h = start_h; h < end_h; h++) {
             float temp = temp_report_[h][1].as<float>();
             float rain = rain_report_[h][1].as<float>();
-            if (utc_report > utc_now) {
-                // TODO, do we include night times for min/max
-                if (temp < min_temp_.second) {
-                    min_temp_.first = h;
-                    min_temp_.second = temp;
-                }
-                if (temp > max_temp_.second) {
-                    max_temp_.first = h;
-                    max_temp_.second = temp;
-                }
-                if (rain >= 0.3) {
-                    weather_status_ = rainy;
-                }
+            if (temp < min_temp_.second) {
+                min_temp_.first = h;
+                min_temp_.second = temp;
+            }
+            if (temp > max_temp_.second) {
+                max_temp_.first = h;
+                max_temp_.second = temp;
+            }
+            if (rain >= 0.3) {
+                weather_status_ = rainy;
             }
         }
     }
 
     void updateWeatherReport(time_t utc_now) {
         String id = getWeatherReportId();
-        Serial.print("Update weather report ");
-        Serial.println(id.c_str());
+        Serial.printf("Update weather report %s\n", id.c_str());
 
         if (!client_.connect(meteo_server, 443)) {
             Serial.println("Connection to meteoswiss failed!");
@@ -144,8 +126,7 @@ class Weather {
         char status[32] = {0};
         client_.readBytesUntil('\r', status, sizeof(status));
         if (strcmp(status, "HTTP/1.1 200 OK") != 0) {
-            Serial.print(F("Unexpected response: "));
-            Serial.println(status);
+            Serial.printf("Unexpected response: %s\n", status);
             return;
         }
 
@@ -196,7 +177,7 @@ class Weather {
         deserializeJson(rain_report_, rain_data);
         deserializeJson(temp_report_, temperature_data);
 
-        updateMinMaxTemp(utc_now);
+        updateMinMaxTemp();
 
         return;
     }
